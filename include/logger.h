@@ -3,8 +3,6 @@
 
 
 #include <spdlog/spdlog.h>
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include <memory>
 
 class Logger : public spdlog::logger {
 public:

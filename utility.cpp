@@ -24,8 +24,6 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    log.info("TRYING IN DATABASE");
-
     auto &database_manager = DatabaseManager::getInstance().initialize(utilits_param->get_database_name(), utilits_param->get_user_name(), utilits_param->get_user_password());
 
     //auto& database_connecrion = DatabaseManager::getInstance();

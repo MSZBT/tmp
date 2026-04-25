@@ -15,7 +15,7 @@ public:
         return dbinstance;
     }
 
-    DatabaseManager& initialize(std::string database_name, std::string user, std::string password);
+    DatabaseManager& initialize(const std::string &d_name, const std::string &u_name, const std::string &p_name);
 
     DatabaseManager(const DatabaseManager&) = delete;
     DatabaseManager& operator=(const DatabaseManager&) = delete;
@@ -25,8 +25,6 @@ public:
     //void execute_changes();
 
 private:
-
-
 
     std::string database_name;
     std::string user;
