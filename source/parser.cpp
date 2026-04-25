@@ -11,13 +11,13 @@ UtArg::UtArg(int argc, char** argv) {
 void UtArg::configurate() {
     this->app->add_flag("-c,--commands", this->help_flag, "command list");
 
-    this->app->add_option("-d,--dbname", this->database_name, "database name input")->required();
+    this->app->add_option("-d,--database", this->database_name, "database name input")->delimiter('=')->required();
 
-    this->app->add_option("-u,--username", this->user_name, "username input")->required();
+    this->app->add_option("-u,--username", this->user_name, "username input")->delimiter('=')->required();
 
-    this->app->add_option("-p,--password", this->user_password, "password database")->required();
+    this->app->add_option("-p,--password", this->user_password, "password database")->delimiter('=')->required();
 
-    this->app->add_option("-t,--migtype", this->migration_type, "type of migrations")->required();
+    this->app->add_option("-a,--action", this->migration_type, "type of migrations")->delimiter('=')->required();
 
     this->app->add_option("-m,--migrations", this->migration_names, "names of migrations")->required();
 }

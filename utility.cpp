@@ -5,7 +5,6 @@ int main(int argc, char** argv) {
     auto log = Logger::getInstance();
 
 
-
     auto utilits_param = std::make_shared<UtArg>(argc, argv);
     utilits_param->parse();
 
@@ -25,8 +24,16 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    log.info("TRYING IN DATABASE");
+
+    auto &database_manager = DatabaseManager::getInstance().initialize(utilits_param->get_database_name(), utilits_param->get_user_name(), utilits_param->get_user_password());
+
+    //auto& database_connecrion = DatabaseManager::getInstance();
+
     for (auto &name : utilits_param->migration_names) {
         std::cout << name << std::endl;
     }
+
+
     return 0;
 }

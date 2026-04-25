@@ -5,8 +5,37 @@
 #define PROJECT_DIR "."
 #endif
 
+#include "logger.h"
 #include <pqxx/pqxx>
 
+class DatabaseManager {
+public:
+    static DatabaseManager& getInstance() {
+        static DatabaseManager dbinstance;
+        return dbinstance;
+    }
+
+    DatabaseManager& initialize(std::string database_name, std::string user, std::string password);
+
+    DatabaseManager(const DatabaseManager&) = delete;
+    DatabaseManager& operator=(const DatabaseManager&) = delete;
+
+
+
+    //void execute_changes();
+
+private:
+
+
+
+    std::string database_name;
+    std::string user;
+    std::string password;
+
+    std::unique_ptr<pqxx::connection> connection;
+
+    DatabaseManager();
+};
 
 /*
 pqxx::connection con("dbname=test_database user=postgres password=masia");

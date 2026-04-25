@@ -1,5 +1,8 @@
+#ifndef LOGGER_H
+#define LOGGER_H
+
+
 #include <spdlog/spdlog.h>
-#include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include <memory>
 
@@ -12,3 +15,5 @@ public:
 private:
     Logger();
 };
+
+#endif
