@@ -7,6 +7,7 @@
 
 #include "logger.h"
 #include <pqxx/pqxx>
+#include <string>
 
 class DatabaseManager {
 public:
@@ -21,8 +22,11 @@ public:
     DatabaseManager& operator=(const DatabaseManager&) = delete;
 
 
+    void execute(std::string &mig_name, std::string &mig_type);
 
-    //void execute_changes();
+    void close_connection();
+
+    std::shared_ptr<pqxx::connection> get_connection();
 
 private:
 
@@ -30,27 +34,9 @@ private:
     std::string user;
     std::string password;
 
-    std::unique_ptr<pqxx::connection> connection;
+    std::shared_ptr<pqxx::connection> connection;
 
     DatabaseManager();
 };
 
-/*
-pqxx::connection con("dbname=test_database user=postgres password=masia");
-
-
-try {
-    pqxx::work txn(con);
-
-    txn.exec(
-        request
-    );
-
-    txn.commit();
-} catch (std::exception& e) {
-    std::cout << e.what() << std::endl;
-}
-
-con.close();
-*/
 #endif //MIGR_DATABASE_MANAGER_H

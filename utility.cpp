@@ -26,11 +26,11 @@ int main(int argc, char** argv) {
 
     auto &database_manager = DatabaseManager::getInstance().initialize(utilits_param->get_database_name(), utilits_param->get_user_name(), utilits_param->get_user_password());
 
-    //auto& database_connecrion = DatabaseManager::getInstance();
-
-    for (auto &name : utilits_param->migration_names) {
-        std::cout << name << std::endl;
+    for (auto &migration_name : utilits_param->migration_names) {
+        database_manager.execute(migration_name, utilits_param->migration_type);
     }
+
+    database_manager.close_connection();
 
 
     return 0;
