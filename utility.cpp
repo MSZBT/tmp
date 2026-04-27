@@ -6,7 +6,6 @@ int main(int argc, char** argv) {
 
 
     auto utilits_param = std::make_shared<UtArg>(argc, argv);
-    utilits_param->parse();
 
 
     if (utilits_param->help_flag) {
