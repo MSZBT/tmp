@@ -2,11 +2,19 @@
 
 int main(int argc, char** argv) {
 
-    auto log = Logger::getInstance();
+    std::shared_ptr<UtArg> utilits_param;
 
+    try {
+        utilits_param = std::make_shared<UtArg>(argc, argv);
+    } catch (std::exception &e) {
+        Logger::getInstance().error("Exception: {}", e.what());
+        return 1;
+    }
 
-    auto utilits_param = std::make_shared<UtArg>(argc, argv);
-
+    if (!utilits_param->check_database_options()) {
+        Logger::getInstance().error("Uncorrected arguments");
+        return 1;
+    }
 
     if (utilits_param->help_flag) {
         std::string line(100, '=');
@@ -25,12 +33,21 @@ int main(int argc, char** argv) {
 
     auto &database_manager = DatabaseManager::getInstance().initialize(utilits_param->get_database_name(), utilits_param->get_user_name(), utilits_param->get_user_password());
 
-    for (auto &migration_name : utilits_param->migration_names) {
-        database_manager.execute(migration_name, utilits_param->migration_type);
+    if (database_manager.get_connection() != nullptr) {
+
+        for (auto &migration_name : utilits_param->migration_names) {
+            try {
+                database_manager.execute(migration_name, utilits_param->migration_type);
+            } catch (std::exception &e) {
+                Logger::getInstance().error("Exception: {}", e.what());
+            }
+        }
+
+        database_manager.close_connection();
+    } else {
+        Logger::getInstance().error("No connection");
+        return 1;
     }
-
-    database_manager.close_connection();
-
 
     return 0;
 }

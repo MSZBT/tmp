@@ -8,10 +8,11 @@
 #include "logger.h"
 #include <pqxx/pqxx>
 #include <string>
+#include <vector>
 
 class DatabaseManager {
 public:
-    static DatabaseManager& getInstance() {
+    static DatabaseManager &getInstance() {
         static DatabaseManager dbinstance;
         return dbinstance;
     }
@@ -27,6 +28,8 @@ public:
     void close_connection();
 
     std::shared_ptr<pqxx::connection> get_connection();
+
+    std::vector<std::string> get_modified_tables(const std::string& request);
 
 private:
 

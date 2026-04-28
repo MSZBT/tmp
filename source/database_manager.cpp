@@ -2,6 +2,7 @@
 
 #include <format>
 #include <fstream>
+#include <regex>
 
 DatabaseManager::DatabaseManager()
 {
@@ -32,7 +33,7 @@ DatabaseManager &DatabaseManager::initialize(const std::string &d_name, const st
 
         pqxx::work transaction(*this->connection);
         {
-            std::string request = "CREATE TABLE IF NOT EXISTS _migrations(id SERIAL, file_name VARCHAR(255), applied_at TIMESTAMP DEFAULT NOW())";
+            std::string request = "CREATE TABLE IF NOT EXISTS _migrations(id SERIAL, file_name VARCHAR(255), table_name VARCHAR(255), applied_at TIMESTAMP DEFAULT NOW())";
             transaction.exec(request);
 
             transaction.commit();
@@ -65,11 +66,26 @@ void DatabaseManager::close_connection()
     }
 }
 
+std::vector<std::string> DatabaseManager::get_modified_tables(const std::string& request) {
+    std::vector<std::string> modified_tables;
+    std::regex r(R"((?:TABLE|INTO|DELETE\s+FROM|UPDATE|FROM|INSERT\s+INTO|JOIN|TRUNCATE\s+TABLE|ALTER\s+TABLE)\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+))");
+
+    auto begin = std::sregex_iterator(request.begin(), request.end(), r);
+    auto end = std::sregex_iterator();
+
+    for (auto it = begin; it != end; ++it) {
+        modified_tables.push_back((*it)[1].str());
+        Logger::getInstance().info("Modified table: {}", (*it)[1].str());
+    }
+
+    return modified_tables;
+}
+
 void DatabaseManager::execute(std::string &mig_name, std::string &mig_type)
 {
     Logger::getInstance().info("Request: {} [{}]", mig_name, mig_type);
 
-    auto connection = this->connection;
+    auto con = this->connection;
 
     try
     {
@@ -79,9 +95,22 @@ void DatabaseManager::execute(std::string &mig_name, std::string &mig_type)
         {
             std::string request((std::istreambuf_iterator<char>(request_file)), std::istreambuf_iterator<char>());
 
-            try
+            auto modified_tables = get_modified_tables(request);
+
             {
-                pqxx::work transaction(*connection);
+                pqxx::work transaction(*con);
+
+                // for (auto &table : modified_tables) {
+                //     std::string check_table = std::format("SELECT table_name FROM information_schema.tables WHERE table_name='{}'", table);
+                //
+                //     auto check_table_res = transaction.exec(check_table);
+                //
+                //     if (check_table_res.empty()) {
+                //         std::string delete_table_request = std::format("DELETE FROM _migrations WHERE table_name='{}'", table);
+                //     }
+                //
+                // }
+
 
                 std::string check_request = std::format("SELECT file_name FROM _migrations WHERE file_name='{}'", mig_name);
 
@@ -109,9 +138,11 @@ void DatabaseManager::execute(std::string &mig_name, std::string &mig_type)
 
                         Logger::getInstance().info("Executing transaction");
 
-                        std::string migr_requets = std::format("INSERT INTO _migrations(file_name) VALUES ({})", mig_name);
+                        for (auto &table : modified_tables) {
+                            std::string migr_requst = std::format("INSERT INTO _migrations(file_name, table_name) VALUES ('{}', '{}')", mig_name, table);
+                            transaction.exec(migr_requst);
+                        }
 
-                        transaction.exec(migr_requets);
                         transaction.exec(request);
 
                     } else {
@@ -119,17 +150,40 @@ void DatabaseManager::execute(std::string &mig_name, std::string &mig_type)
                     }
                 }
 
+                Logger::getInstance().info("CHECK FOR EXISTING");
+
+                for (auto &table : modified_tables) {
+                    std::string check_table = std::format("SELECT table_name FROM information_schema.tables WHERE table_name='{}'", table);
+
+                    auto check_table_res = transaction.exec(check_table);
+
+                    Logger::getInstance().info("{} - REQUST: {}", check_table, check_table_res.empty());
+
+                    if (check_table_res.empty()) {
+                        std::string delete_table_request = std::format("DELETE FROM _migrations WHERE table_name='{}'", table);
+                        transaction.exec(delete_table_request);
+                    }
+
+                }
+
                 transaction.commit();
             }
-            catch (std::exception &e)
-            {
-                Logger::getInstance().error("Error with transaction: {}", e.what());
-            }
+
         }
         else
         {
             Logger::getInstance().error("No such migration file");
         }
+    }
+    catch (const pqxx::undefined_table& e) {
+        std::string msg = e.what();
+
+        size_t start = msg.find('"');
+        size_t end = msg.rfind('"');
+        std::string table = msg.substr(start + 1, end - start - 1);
+
+        Logger::getInstance().error("Undefined table {}", table.c_str());
+
     }
     catch (std::exception &e)
     {
