@@ -28,7 +28,9 @@ void UtArg::configurate()
 
     this->app->add_flag("-l,--list", this->help_flag, "command list");
 
-    this->app->add_flag("-f,--fileconf", this->file_conf, "command list");
+    this->app->add_flag("-s,--status", this->status_flag, "migrations status");
+
+    this->app->add_flag("-f,--fileconf", this->file_conf, "configuration from file '.migr_conf.json' (database, username, password)");
 
     this->app->add_option("-d,--database", this->database_name, "database name input")->delimiter('=');
 
@@ -88,7 +90,7 @@ bool UtArg::check_database_options()
         return false;
     }
 
-    if (this->migration_type.empty() || this->migration_names.empty())
+    if ((this->migration_type.empty() || this->migration_names.empty()) && !this->help_flag && !this->status_flag)
     {
         return false;
     }
@@ -141,7 +143,7 @@ void UtArg::parse()
             }
         }
 
-        if (!this->check_database_options() && !this->help_flag)
+        if (!this->check_database_options() && !this->help_flag && !this->status_flag)
         {
             Logger::getInstance().error("Specify all parameters to use postgres or "
                                         "use \"migr_conf\" for configuration");

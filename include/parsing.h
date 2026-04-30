@@ -23,7 +23,7 @@ public:
 
     bool help_flag = false;
     bool file_conf = false;
-    bool list_flag = false;
+    bool status_flag = false;
 
     UtArg(int argc, char** argv);
     ~UtArg() = default;

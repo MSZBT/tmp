@@ -29,7 +29,9 @@ public:
 
     std::shared_ptr<pqxx::connection> get_connection();
 
-    std::vector<std::string> get_modified_tables(const std::string& request);
+    static std::vector<std::string> get_modified_tables(const std::string& request);
+
+    void show_status();
 
 private:
 
